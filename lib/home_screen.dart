@@ -3,8 +3,6 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-import 'employee_controller.dart'; 
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -13,14 +11,12 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final EmployeeController employeeController = Get.put(EmployeeController());
-
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _positionController = TextEditingController();
   final TextEditingController _deptController = TextEditingController();
 
-  List _employee = [].obs;
+  List _employee = [];
   List _filteredEmployee = [];
 
   @override
@@ -91,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void showMyBottomSheet() {
+  void showAddEmployeeSheet() {
     showModalBottomSheet(
       context: context,
       builder: (context) => Padding(
@@ -103,67 +99,44 @@ class _HomeScreenState extends State<HomeScreen> {
               const Text("Add New Employee",
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600)),
               const SizedBox(height: 25),
-              SizedBox(
-                height: 56,
-                width: MediaQuery.of(context).size.width,
-                child: TextField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(
-                    prefixIcon: Icon(Icons.person_outline),
-                    labelText: "Full Name",
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(10)),
-                    ),
-                  ),
+              TextField(
+                controller: _nameController,
+                decoration: const InputDecoration(
+                  prefixIcon: Icon(Icons.person_outline),
+                  labelText: "Full Name",
+                  border: OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 15),
-              SizedBox(
-                height: 56,
-                width: MediaQuery.of(context).size.width,
-                child: TextField(
-                  controller: _positionController,
-                  decoration: const InputDecoration(
-                    prefixIcon: Icon(Icons.work_outline),
-                    labelText: "Job Position",
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(10)),
-                    ),
-                  ),
+              TextField(
+                controller: _positionController,
+                decoration: const InputDecoration(
+                  prefixIcon: Icon(Icons.work_outline),
+                  labelText: "Job Position",
+                  border: OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 15),
-              SizedBox(
-                height: 56,
-                width: MediaQuery.of(context).size.width,
-                child: TextField(
-                  controller: _deptController,
-                  decoration: const InputDecoration(
-                    prefixIcon: Icon(Icons.apartment),
-                    labelText: "Department",
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(10)),
-                    ),
-                  ),
+              TextField(
+                controller: _deptController,
+                decoration: const InputDecoration(
+                  prefixIcon: Icon(Icons.apartment),
+                  labelText: "Department",
+                  border: OutlineInputBorder(),
                 ),
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 25),
               Center(
-                child: GestureDetector(
-                  onTap: _postData,
-                  child: Container(
-                    height: 56,
-                    width: 200,
-                    alignment: Alignment.center,
-                    decoration: const BoxDecoration(
-                      color: Colors.blue,
-                      borderRadius: BorderRadius.all(Radius.circular(10)),
-                    ),
-                    child: const Text(
-                      "Add Employee",
-                      style: TextStyle(color: Colors.white),
-                    ),
+                child: ElevatedButton(
+                  onPressed: _postData,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    minimumSize: const Size(200, 50),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
                   ),
+                  child: const Text("Add Employee",
+                      style: TextStyle(color: Colors.white)),
                 ),
               ),
             ],
@@ -173,51 +146,78 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void showEmployeeDetail(Map<String, dynamic> emp) {
-    Get.bottomSheet(
-      Container(
-        padding: const EdgeInsets.all(20),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircleAvatar(
-              radius: 30,
-              backgroundColor: Colors.blueGrey,
-              child: Text(
-                (emp['name'] ?? 'N/A')[0].toUpperCase(),
-                style: const TextStyle(fontSize: 24, color: Colors.white),
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              emp['name'] ?? 'N/A',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-            ),
-            Text(
-              emp['position'] ?? 'No Position',
-              style: const TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.apartment, size: 16, color: Colors.grey),
-                const SizedBox(width: 4),
-                Text(
-                  emp['department'] ?? 'No Department',
-                  style: const TextStyle(fontSize: 14),
-                ),
+  void showEmployeeDialog(Map<String, dynamic> emp) {
+    Get.dialog(
+      Dialog(
+        backgroundColor: Colors.transparent,
+        child: Center(
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            margin: const EdgeInsets.symmetric(horizontal: 20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black26,
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
+                )
               ],
             ),
-            const SizedBox(height: 20),
-          ],
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircleAvatar(
+                  radius: 30,
+                  backgroundColor: Colors.blueGrey,
+                  child: Text(
+                    (emp['name'] ?? 'N/A')[0].toUpperCase(),
+                    style: const TextStyle(fontSize: 22, color: Colors.white),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  emp['name'] ?? 'N/A',
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  emp['position'] ?? 'No Position',
+                  style: const TextStyle(fontSize: 14, color: Colors.grey),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.apartment,
+                          size: 16, color: Colors.blue),
+                      const SizedBox(width: 6),
+                      Text(
+                        emp['department'] ?? 'No Department',
+                        style: const TextStyle(
+                            fontSize: 14, color: Colors.black87),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.redAccent),
+                  onPressed: () => Get.back(),
+                )
+              ],
+            ),
+          ),
         ),
       ),
-      isScrollControlled: true,
     );
   }
 
@@ -265,10 +265,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 16),
                           child: ListTile(
-                            onTap: () {
-                              employeeController.setEmployee(employee);
-                              showEmployeeDetail(employee);
-                            },
+                            onTap: () => showEmployeeDialog(employee),
                             leading: CircleAvatar(
                               radius: 25,
                               backgroundColor: Colors.blueGrey,
@@ -308,12 +305,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         );
                       },
                     ),
-            ),
+            )
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: showMyBottomSheet,
+        onPressed: showAddEmployeeSheet,
         child: const Icon(Icons.add),
       ),
     );
