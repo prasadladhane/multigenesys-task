@@ -16,8 +16,11 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _positionController = TextEditingController();
   final TextEditingController _deptController = TextEditingController();
 
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
   List _employee = [];
   List _filteredEmployee = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -29,18 +32,28 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void fetchData() async {
-    final response = await http.get(
-      Uri.parse("https://669b3f09276e45187d34eb4e.mockapi.io/api/v1/employee"),
-    );
+    setState(() => _isLoading = true);
 
-    if (response.statusCode == 200) {
-      setState(() {
-        _employee =
-            List<Map<String, dynamic>>.from(json.decode(response.body));
-        _filteredEmployee = _employee;
-      });
-    } else {
-      Get.snackbar("Error", "Failed to load data from server");
+    try {
+      final response = await http.get(
+        Uri.parse("https://669b3f09276e45187d34eb4e.mockapi.io/api/v1/employee"),
+      );
+
+      if (!mounted) return;
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _employee = List<Map<String, dynamic>>.from(json.decode(response.body));
+          _filteredEmployee = _employee;
+          _isLoading = false;
+        });
+      } else {
+        Get.snackbar("Error", "Failed to load data");
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      Get.snackbar("Exception", e.toString());
+      setState(() => _isLoading = false);
     }
   }
 
@@ -50,20 +63,13 @@ class _HomeScreenState extends State<HomeScreen> {
       return name.contains(query.toLowerCase());
     }).toList();
 
-    setState(() {
-      _filteredEmployee = result;
-    });
+    setState(() => _filteredEmployee = result);
   }
 
   void _postData() async {
     final name = _nameController.text.trim();
     final position = _positionController.text.trim();
     final dept = _deptController.text.trim();
-
-    if (name.isEmpty || position.isEmpty || dept.isEmpty) {
-      Get.snackbar("Validation", "All fields are required");
-      return;
-    }
 
     final response = await http.post(
       Uri.parse("https://669b3f09276e45187d34eb4e.mockapi.io/api/v1/employee"),
@@ -76,70 +82,101 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     if (response.statusCode == 201) {
-      Get.snackbar("Success", "Employee added successfully");
-      Navigator.of(context).pop();
+      Get.snackbar("Success", "Employee added");
       _nameController.clear();
       _positionController.clear();
       _deptController.clear();
       fetchData();
     } else {
-      Get.snackbar("Error", "Failed to store data on server");
+      Get.snackbar("Error", "Failed to store data");
     }
   }
 
   void showAddEmployeeSheet() {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (context) => Padding(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        ),
         child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text("Add New Employee",
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600)),
-              const SizedBox(height: 25),
-              TextField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.person_outline),
-                  labelText: "Full Name",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 15),
-              TextField(
-                controller: _positionController,
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.work_outline),
-                  labelText: "Job Position",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 15),
-              TextField(
-                controller: _deptController,
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.apartment),
-                  labelText: "Department",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 25),
-              Center(
-                child: ElevatedButton(
-                  onPressed: _postData,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    minimumSize: const Size(200, 50),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("Add New Employee",
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 25),
+                TextFormField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(
+                    prefixIcon: Icon(Icons.person_outline),
+                    labelText: "Full Name",
+                    border: OutlineInputBorder(),
                   ),
-                  child: const Text("Add Employee",
-                      style: TextStyle(color: Colors.white)),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Full Name is required';
+                    }
+                    return null;
+                  },
                 ),
-              ),
-            ],
+                const SizedBox(height: 15),
+                TextFormField(
+                  controller: _positionController,
+                  decoration: const InputDecoration(
+                    prefixIcon: Icon(Icons.work_outline),
+                    labelText: "Job Position",
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Job Position is required';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 15),
+                TextFormField(
+                  controller: _deptController,
+                  decoration: const InputDecoration(
+                    prefixIcon: Icon(Icons.apartment),
+                    labelText: "Department",
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Department is required';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 25),
+                Center(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (_formKey.currentState!.validate()) {
+                        Navigator.pop(context);
+                        _postData();
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      minimumSize: const Size(200, 50),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                    ),
+                    child: const Text("Add Employee",
+                        style: TextStyle(color: Colors.white)),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -251,60 +288,63 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 20),
             Expanded(
-              child: _filteredEmployee.isEmpty
-                  ? const Center(child: Text("No employees found"))
-                  : ListView.builder(
-                      itemCount: _filteredEmployee.length,
-                      itemBuilder: (context, index) {
-                        final employee = _filteredEmployee[index];
-                        final name = employee['name'] ?? 'N/A';
-                        final position = employee['position'] ?? 'N/A';
-                        final dept = employee['department'] ?? 'N/A';
-                        final avatar = employee['avatar'];
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _filteredEmployee.isEmpty
+                      ? const Center(child: Text("No employees found"))
+                      : ListView.builder(
+                          itemCount: _filteredEmployee.length,
+                          itemBuilder: (context, index) {
+                            final employee = _filteredEmployee[index];
+                            final name = employee['name'] ?? 'N/A';
+                            final position = employee['position'] ?? 'N/A';
+                            final dept = employee['department'] ?? 'N/A';
+                            final avatar = employee['avatar'];
 
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: ListTile(
-                            onTap: () => showEmployeeDialog(employee),
-                            leading: CircleAvatar(
-                              radius: 25,
-                              backgroundColor: Colors.blueGrey,
-                              backgroundImage: avatar != null && avatar != ""
-                                  ? NetworkImage(avatar)
-                                  : null,
-                              child: (avatar == null || avatar == "")
-                                  ? Text(
-                                      name.isNotEmpty
-                                          ? name[0].toUpperCase()
-                                          : "?",
-                                      style: const TextStyle(
-                                          fontSize: 22,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white),
-                                    )
-                                  : null,
-                            ),
-                            title: Text(
-                              name,
-                              style: const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.w500),
-                            ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(position,
-                                    style: const TextStyle(
-                                        fontSize: 12, color: Colors.grey)),
-                                Text(dept,
-                                    style: const TextStyle(
-                                        fontSize: 12, color: Colors.grey)),
-                              ],
-                            ),
-                            trailing: const Icon(Icons.keyboard_arrow_right),
-                          ),
-                        );
-                      },
-                    ),
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 16),
+                              child: ListTile(
+                                onTap: () => showEmployeeDialog(employee),
+                                leading: CircleAvatar(
+                                  radius: 25,
+                                  backgroundColor: Colors.blueGrey,
+                                  backgroundImage: avatar != null && avatar != ""
+                                      ? NetworkImage(avatar)
+                                      : null,
+                                  child: (avatar == null || avatar == "")
+                                      ? Text(
+                                          name.isNotEmpty
+                                              ? name[0].toUpperCase()
+                                              : "?",
+                                          style: const TextStyle(
+                                              fontSize: 22,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white),
+                                        )
+                                      : null,
+                                ),
+                                title: Text(
+                                  name,
+                                  style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w500),
+                                ),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(position,
+                                        style: const TextStyle(
+                                            fontSize: 12, color: Colors.grey)),
+                                    Text(dept,
+                                        style: const TextStyle(
+                                            fontSize: 12, color: Colors.grey)),
+                                  ],
+                                ),
+                                trailing: const Icon(Icons.keyboard_arrow_right),
+                              ),
+                            );
+                          },
+                        ),
             )
           ],
         ),
