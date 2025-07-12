@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'employee_controller.dart'; 
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -11,6 +13,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final EmployeeController employeeController = Get.put(EmployeeController());
+
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _positionController = TextEditingController();
@@ -169,6 +173,54 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void showEmployeeDetail(Map<String, dynamic> emp) {
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(20),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircleAvatar(
+              radius: 30,
+              backgroundColor: Colors.blueGrey,
+              child: Text(
+                (emp['name'] ?? 'N/A')[0].toUpperCase(),
+                style: const TextStyle(fontSize: 24, color: Colors.white),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              emp['name'] ?? 'N/A',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+            ),
+            Text(
+              emp['position'] ?? 'No Position',
+              style: const TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.apartment, size: 16, color: Colors.grey),
+                const SizedBox(width: 4),
+                Text(
+                  emp['department'] ?? 'No Department',
+                  style: const TextStyle(fontSize: 14),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+      isScrollControlled: true,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -213,6 +265,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 16),
                           child: ListTile(
+                            onTap: () {
+                              employeeController.setEmployee(employee);
+                              showEmployeeDetail(employee);
+                            },
                             leading: CircleAvatar(
                               radius: 25,
                               backgroundColor: Colors.blueGrey,
