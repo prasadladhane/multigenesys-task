@@ -1,6 +1,6 @@
+import 'package:employee_management/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'home_screen.dart'; // Ensure this file exists in your project
 
 void main() {
   runApp(const MyApp());
@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       title: 'Employee App',
       debugShowCheckedModeBanner: false,
-      home: HomeScreen(),
+      home: SplashScreen()
     );
   }
 }
