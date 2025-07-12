@@ -12,21 +12,12 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _positionController = TextEditingController();
+  final TextEditingController _deptController = TextEditingController();
 
-  final TextEditingController _nameController=TextEditingController();
-  final TextEditingController _positionController=TextEditingController();
-  final TextEditingController _deptController=TextEditingController();
-
-  List<Map<String, dynamic>> _employee = [];
-  List<Map<String, dynamic>> _filteredEmployee = [];
-
-  String? name;
-  String? dept;
-  String? position;
-
-  // final Map _uploadData={
-  //   "name":"","poition":"","department":""
-  // };
+  List _employee = [].obs;
+  List _filteredEmployee = [];
 
   @override
   void initState() {
@@ -38,8 +29,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void fetchData() async {
-    final response = await http.get(Uri.parse(
-        "https://669b3f09276e45187d34eb4e.mockapi.io/api/v1/employee"));
+    final response = await http.get(
+      Uri.parse("https://669b3f09276e45187d34eb4e.mockapi.io/api/v1/employee"),
+    );
 
     if (response.statusCode == 200) {
       setState(() {
@@ -64,105 +56,116 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _postData() async {
+    final name = _nameController.text.trim();
+    final position = _positionController.text.trim();
+    final dept = _deptController.text.trim();
+
+    if (name.isEmpty || position.isEmpty || dept.isEmpty) {
+      Get.snackbar("Validation", "All fields are required");
+      return;
+    }
+
     final response = await http.post(
       Uri.parse("https://669b3f09276e45187d34eb4e.mockapi.io/api/v1/employee"),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
-        "name": "Prasad Ladhane",
-        "position": "Intern",
-        "department": "Flutter",
+        "name": name,
+        "position": position,
+        "department": dept,
       }),
     );
 
     if (response.statusCode == 201) {
-      Get.snackbar("Success", "Data stored on server");
-      fetchData(); 
+      Get.snackbar("Success", "Employee added successfully");
+      Navigator.of(context).pop();
+      _nameController.clear();
+      _positionController.clear();
+      _deptController.clear();
+      fetchData();
     } else {
       Get.snackbar("Error", "Failed to store data on server");
     }
   }
 
-  showMyBottomSheet(){
+  void showMyBottomSheet() {
     showModalBottomSheet(
-      context: context, 
-      builder: (context)=>Padding(
+      context: context,
+      builder: (context) => Padding(
         padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Add New Employee",style:TextStyle(fontSize: 22,fontWeight:FontWeight.w600)),
-            Padding(
-              padding: const EdgeInsets.only(top:25),
-              child: SizedBox(
-                height:56,
-                width:MediaQuery.of(context).size.width,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text("Add New Employee",
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 25),
+              SizedBox(
+                height: 56,
+                width: MediaQuery.of(context).size.width,
                 child: TextField(
                   controller: _nameController,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     prefixIcon: Icon(Icons.person_outline),
                     labelText: "Full Name",
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(10))
-                    )
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                    ),
                   ),
-                )
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top:15),
-              child: SizedBox(
-                  height:56,
-                  width:MediaQuery.of(context).size.width,
-                  child: TextField(
-                    controller: _positionController,
-                    decoration: InputDecoration(
-                      prefixIcon: Icon(Icons.person),
-                      labelText: "Job Position",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(10))
-                      )
-                    ),
-                  )
-                ),
-            ),
-              Padding(
-                padding: const EdgeInsets.only(top:15),
-                child: SizedBox(
-                  height:56,
-                  width:MediaQuery.of(context).size.width,
-                  child: TextField(
-                    controller: _deptController,
-                    decoration: InputDecoration(
-                      prefixIcon: Icon(Icons.apartment),
-                      labelText: "Department",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(10))
-                      )
-                    ),
-                  )
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(top:30,left:90),
+              const SizedBox(height: 15),
+              SizedBox(
+                height: 56,
+                width: MediaQuery.of(context).size.width,
+                child: TextField(
+                  controller: _positionController,
+                  decoration: const InputDecoration(
+                    prefixIcon: Icon(Icons.work_outline),
+                    labelText: "Job Position",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 15),
+              SizedBox(
+                height: 56,
+                width: MediaQuery.of(context).size.width,
+                child: TextField(
+                  controller: _deptController,
+                  decoration: const InputDecoration(
+                    prefixIcon: Icon(Icons.apartment),
+                    labelText: "Department",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 30),
+              Center(
                 child: GestureDetector(
-                  // onTap: (){
-                  //   Get.to(page)
-                  // },
+                  onTap: _postData,
                   child: Container(
-                    height:56,
+                    height: 56,
                     width: 200,
                     alignment: Alignment.center,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: Colors.blue,
-                      borderRadius: BorderRadius.all(Radius.circular(10))
+                      borderRadius: BorderRadius.all(Radius.circular(10)),
                     ),
-                    child:Text("Add Employee",style: TextStyle(color:Colors.white),)
+                    child: const Text(
+                      "Add Employee",
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ),
-              )
-          ],
+              ),
+            ],
+          ),
         ),
-      )
+      ),
     );
   }
 
@@ -249,13 +252,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         );
                       },
                     ),
-            )
+            ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _postData,
-        // onPressed: showMyBottomSheet,
+        onPressed: showMyBottomSheet,
         child: const Icon(Icons.add),
       ),
     );
